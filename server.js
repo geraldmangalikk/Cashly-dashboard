@@ -12,14 +12,21 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Konfigurasi PostgreSQL
-const pool = new Pool({
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    host: process.env.DB_SERVER || 'localhost',
-    database: process.env.DB_NAME || 'keuangandb',
-    port: process.env.DB_PORT || 5432,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
-});
+const dbConfig = process.env.DATABASE_URL 
+    ? { 
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+      }
+    : {
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD || 'password',
+        host: process.env.DB_SERVER || 'localhost',
+        database: process.env.DB_NAME || 'keuangandb',
+        port: process.env.DB_PORT || 5432,
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
+    };
+
+const pool = new Pool(dbConfig);
 
 pool.connect()
     .then(() => console.log('Terhubung ke PostgreSQL'))
