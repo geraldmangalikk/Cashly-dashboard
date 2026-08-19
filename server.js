@@ -218,7 +218,7 @@ app.get('/api/chart/categories', async (req, res) => {
         }
 
         const result = await pool.query(`
-            SELECT Kategori as "Kategori", SUM(Nominal) as "Total"
+            SELECT Kategori as "Kategori", CAST(SUM(Nominal) AS FLOAT) as "Total"
             FROM Transaksi
             ${whereStr}
             GROUP BY Kategori
@@ -242,7 +242,7 @@ app.get('/api/chart/categories-income', async (req, res) => {
         }
 
         const result = await pool.query(`
-            SELECT Kategori as "Kategori", SUM(Nominal) as "Total"
+            SELECT Kategori as "Kategori", CAST(SUM(Nominal) AS FLOAT) as "Total"
             FROM Transaksi
             ${whereStr}
             GROUP BY Kategori
@@ -265,8 +265,8 @@ app.get('/api/chart/cashflow', async (req, res) => {
             queryStr = `
                 SELECT 
                        TO_CHAR(Tanggal, 'YYYY-MM-DD') as "Label",
-                       SUM(CASE WHEN Jenis = 'Pemasukan' THEN Nominal ELSE 0 END) as "Pemasukan",
-                       SUM(CASE WHEN Jenis = 'Pengeluaran' THEN Nominal ELSE 0 END) as "Pengeluaran"
+                       CAST(SUM(CASE WHEN Jenis = 'Pemasukan' THEN Nominal ELSE 0 END) AS FLOAT) as "Pemasukan",
+                       CAST(SUM(CASE WHEN Jenis = 'Pengeluaran' THEN Nominal ELSE 0 END) AS FLOAT) as "Pengeluaran"
                 FROM Transaksi
                 WHERE CAST(Tanggal AS DATE) >= $1 AND CAST(Tanggal AS DATE) <= $2
                 GROUP BY TO_CHAR(Tanggal, 'YYYY-MM-DD')
@@ -277,8 +277,8 @@ app.get('/api/chart/cashflow', async (req, res) => {
             queryStr = `
                 SELECT 
                        TO_CHAR(Tanggal, 'YYYY-MM-DD') as "Label",
-                       SUM(CASE WHEN Jenis = 'Pemasukan' THEN Nominal ELSE 0 END) as "Pemasukan",
-                       SUM(CASE WHEN Jenis = 'Pengeluaran' THEN Nominal ELSE 0 END) as "Pengeluaran"
+                       CAST(SUM(CASE WHEN Jenis = 'Pemasukan' THEN Nominal ELSE 0 END) AS FLOAT) as "Pemasukan",
+                       CAST(SUM(CASE WHEN Jenis = 'Pengeluaran' THEN Nominal ELSE 0 END) AS FLOAT) as "Pengeluaran"
                 FROM Transaksi
                 WHERE Tanggal >= CURRENT_DATE - INTERVAL '7 days'
                 GROUP BY TO_CHAR(Tanggal, 'YYYY-MM-DD')
@@ -289,8 +289,8 @@ app.get('/api/chart/cashflow', async (req, res) => {
             queryStr = `
                 SELECT 
                        TO_CHAR(Tanggal, 'YYYY') as "Label",
-                       SUM(CASE WHEN Jenis = 'Pemasukan' THEN Nominal ELSE 0 END) as "Pemasukan",
-                       SUM(CASE WHEN Jenis = 'Pengeluaran' THEN Nominal ELSE 0 END) as "Pengeluaran"
+                       CAST(SUM(CASE WHEN Jenis = 'Pemasukan' THEN Nominal ELSE 0 END) AS FLOAT) as "Pemasukan",
+                       CAST(SUM(CASE WHEN Jenis = 'Pengeluaran' THEN Nominal ELSE 0 END) AS FLOAT) as "Pengeluaran"
                 FROM Transaksi
                 WHERE Tanggal >= CURRENT_DATE - INTERVAL '5 years'
                 GROUP BY TO_CHAR(Tanggal, 'YYYY')
@@ -301,8 +301,8 @@ app.get('/api/chart/cashflow', async (req, res) => {
             queryStr = `
                 SELECT 
                        TO_CHAR(Tanggal, 'YYYY-MM') as "Label",
-                       SUM(CASE WHEN Jenis = 'Pemasukan' THEN Nominal ELSE 0 END) as "Pemasukan",
-                       SUM(CASE WHEN Jenis = 'Pengeluaran' THEN Nominal ELSE 0 END) as "Pengeluaran"
+                       CAST(SUM(CASE WHEN Jenis = 'Pemasukan' THEN Nominal ELSE 0 END) AS FLOAT) as "Pemasukan",
+                       CAST(SUM(CASE WHEN Jenis = 'Pengeluaran' THEN Nominal ELSE 0 END) AS FLOAT) as "Pengeluaran"
                 FROM Transaksi
                 WHERE Tanggal >= CURRENT_DATE - INTERVAL '12 months'
                 GROUP BY TO_CHAR(Tanggal, 'YYYY-MM')
@@ -419,7 +419,7 @@ app.get('/api/chart/pemasukan', async (req, res) => {
         const result = await pool.query(`
             SELECT 
                 TO_CHAR(Tanggal, '${formatStr}') AS "Label",
-                SUM(Nominal) AS "Total"
+                CAST(SUM(Nominal) AS FLOAT) AS "Total"
             FROM Transaksi
             WHERE Jenis = 'Pemasukan' 
               AND Tanggal >= $1 
@@ -520,7 +520,7 @@ app.get('/api/chart/pengeluaran', async (req, res) => {
         const result = await pool.query(`
             SELECT 
                 TO_CHAR(Tanggal, '${formatStr}') AS "Label",
-                SUM(Nominal) AS "Total"
+                CAST(SUM(Nominal) AS FLOAT) AS "Total"
             FROM Transaksi
             WHERE Jenis = 'Pengeluaran' 
               AND Tanggal >= $1 
