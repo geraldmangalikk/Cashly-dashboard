@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashly - Aplikasi Pencatatan Keuangan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=6">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="top-navbar">
+            <div class="brand">
+                <i class="fa-solid fa-wallet fa-bounce" style="--fa-animation-iteration-count: infinite; --fa-animation-duration: 3s;"></i>
+                <h2>Cash<span>ly</span></h2>
+            </div>
+            <div class="nav-links-container">
+                <button id="nav-dashboard" class="nav-btn active">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button id="nav-pemasukan" class="nav-btn">
+                    <i class="fa-solid fa-arrow-down"></i>
+                    <span>Pemasukan</span>
+                </button>
+                <button id="nav-pengeluaran" class="nav-btn">
+                    <i class="fa-solid fa-arrow-up"></i>
+                    <span>Pengeluaran</span>
+                </button>
+                <button id="nav-tabungan" class="nav-btn">
+                    <i class="fa-solid fa-piggy-bank"></i>
+                    <span>Tabungan</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content-area">
+            <!-- View: Dashboard -->
+            <section id="dashboard-view" class="view-section active">
+                <header class="view-header flex-header">
+                    <div>
+                        <h1>Ringkasan Keuangan</h1>
+                        <p>Pantau arus kas Anda secara real-time</p>
+                    </div>
+                    <div class="header-actions">
+                        <select id="filter-month" class="filter-select">
+                            <option value="">Semua Bulan</option>
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                        <select id="filter-year" class="filter-select">
+                            <option value="">Semua Tahun</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                        <button id="btn-export" class="action-btn export-btn">Unduh Excel</button>
+                    </div>
+                </header>
+
+                <div class="summary-cards">
+                    <div class="card balance">
+                        <h3>Total Saldo Aktif</h3>
+                        <p id="total-saldo" class="amount">Rp 0</p>
+                        <i class="fa-solid fa-vault fa-beat-fade card-bg-icon"></i>
+                    </div>
+                    <div class="card income">
+                        <h3>Total Pemasukan</h3>
+                        <p id="total-pemasukan" class="amount">Rp 0</p>
+                        <i class="fa-solid fa-hand-holding-dollar fa-beat-fade card-bg-icon"></i>
+                    </div>
+                    <div class="card expense">
+                        <h3>Total Pengeluaran</h3>
+                        <p id="total-pengeluaran" class="amount">Rp 0</p>
+                        <i class="fa-solid fa-money-bill-wave fa-beat-fade card-bg-icon"></i>
+                    </div>
+                    <div class="card savings">
+                        <h3>Total Tabungan</h3>
+                        <p id="total-tabungan" class="amount">Rp 0</p>
+                        <i class="fa-solid fa-piggy-bank fa-beat-fade card-bg-icon"></i>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="display: flex; gap: 1.5rem; width: 100%;">
+                        <div class="chart-container" style="flex: 1;">
+                            <h3>Persentase Pemasukan</h3>
+                            <div id="categoryIncomeChart" style="width: 100%; height: 300px;"></div>
+                        </div>
+                        <div class="chart-container" style="flex: 1;">
+                            <h3>Persentase Pengeluaran</h3>
+                            <div id="categoryChart" style="width: 100%; height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="width: 100%;">
+                        <div class="chart-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; width: 100%;">
+                            <h3 style="margin: 0;">Tren Cashflow</h3>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="date" id="cashflow-start" class="filter-select" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                                <span>s/d</span>
+                                <input type="date" id="cashflow-end" class="filter-select" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                                <select id="cashflow-range" class="filter-select" style="padding: 0.3rem 0.8rem; font-size: 0.9rem;">
+                                    <option value="monthly">Bulanan (12 Bulan)</option>
+                                    <option value="daily">Harian (Seminggu)</option>
+                                    <option value="yearly">Tahunan (5 Tahun)</option>
+                                    <option value="custom">Kustom (Rentang)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <canvas id="cashflowChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="history-section">
+                    <div class="history-header">
+                        <h2>History Transaksi</h2>
+                    </div>
+                    <div class="table-container">
+                        <table id="dashboard-transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Jenis</th>
+                                    <th>Kategori/Tujuan</th>
+                                    <th>Nominal</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="premium-pagination" id="dashboard-pagination">
+                        <button class="premium-btn prev-btn" id="dashboard-prev-btn"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                        <span class="page-info" id="dashboard-page-info">Page 1 of 1</span>
+                        <button class="premium-btn next-btn" id="dashboard-next-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View: Pemasukan -->
+            <section id="pemasukan-view" class="view-section">
+                <header class="view-header flex-header">
+                    <div>
+                        <h1>Pemasukan</h1>
+                        <p>Analisa dan catat uang masuk Anda</p>
+                    </div>
+                    <div class="header-actions">
+                        <select id="pem-filter-month" class="filter-select">
+                            <option value="">Bulan Ini</option>
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                        <select id="pem-filter-year" class="filter-select">
+                            <option value="">Tahun Ini</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                </header>
+
+                <div class="mini-summary mb-2">
+                    <div class="mini-card text-income">
+                        <i class="fa-solid fa-arrow-trend-up fa-fade"></i>
+                        <div style="flex-grow: 1;">
+                            <h4>Total Pemasukan</h4>
+                            <p id="stat-pem-total" style="font-size: 1.5rem; margin-bottom: 0.3rem;">Rp 0</p>
+                            <span id="stat-pem-change" class="badge badge-neutral">0% vs Bulan Lalu</span>
+                        </div>
+                    </div>
+                    <div class="mini-card text-income">
+                        <i class="fa-solid fa-medal fa-beat" style="--fa-animation-duration: 2s;"></i>
+                        <div>
+                            <h4>Pemasukan Tertinggi</h4>
+                            <p id="stat-pem-max" style="font-size: 1.5rem; margin-bottom: 0.3rem;">Rp 0</p>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);" id="stat-pem-max-cat">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advanced-chart-section mb-2">
+                    <div class="chart-controls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h3>Grafik Pemasukan</h3>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <input type="date" id="pem-chart-start" title="Tanggal Mulai" class="filter-select">
+                            <span style="color:var(--text-muted);">s/d</span>
+                            <input type="date" id="pem-chart-end" title="Tanggal Akhir" class="filter-select">
+                            <select id="pem-chart-group" class="filter-select">
+                                <option value="daily">Harian</option>
+                                <option value="monthly">Bulanan</option>
+                                <option value="yearly">Tahunan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="pemasukanChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="form-container full-width mb-2">
+                    <h3 style="margin-top:0; margin-bottom:1.5rem; font-size:1.2rem;">Catat Pemasukan Baru</h3>
+                    <form id="pemasukan-form" class="form-horizontal">
+                        <div class="form-group">
+                            <label for="pemasukan-tanggal">Tanggal</label>
+                            <input type="date" id="pemasukan-tanggal" onclick="this.showPicker()" style="cursor: pointer;" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pemasukan-kategori">Kategori</label>
+                            <select id="pemasukan-kategori" required>
+                                <option value="" disabled selected>Pilih Kategori</option>
+                                <option value="Gaji">Gaji</option>
+                                <option value="Bonus">Bonus</option>
+                                <option value="Hasil Bisnis">Hasil Bisnis</option>
+                                <option value="Pencairan Investasi">Pencairan Investasi</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pemasukan-nominal">Nominal (Rp)</label>
+                            <input type="number" id="pemasukan-nominal" min="1" step="1" placeholder="Contoh: 5000000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pemasukan-keterangan">Keterangan</label>
+                            <textarea id="pemasukan-keterangan" rows="2" placeholder="Deskripsi singkat..."></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn" style="background-color: var(--color-income);">Simpan Pemasukan</button>
+                    </form>
+                </div>
+
+                <div class="history-section">
+                    <div class="history-header flex-header">
+                        <h2>Riwayat Pemasukan</h2>
+                        <div class="header-actions">
+                            <input type="text" id="pem-table-filter-search" class="filter-select" placeholder="Cari keterangan..." style="width:150px;">
+                            <select id="pem-table-filter-month" class="filter-select">
+                                <option value="">Semua Bulan</option>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                            <select id="pem-table-filter-year" class="filter-select">
+                                <option value="">Semua Tahun</option>
+                                <option value="2027">2027</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                            <select id="pem-table-filter-category" class="filter-select">
+                                <option value="">Semua Kategori</option>
+                                <option value="Gaji">Gaji</option>
+                                <option value="Bonus">Bonus</option>
+                                <option value="Hasil Bisnis">Hasil Bisnis</option>
+                                <option value="Pencairan Investasi">Pencairan Investasi</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="pemasukan-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Kategori</th>
+                                    <th>Keterangan</th>
+                                    <th>Nominal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="pagination-controls">
+                            <button class="page-btn" id="pem-prev">Sebelumnya</button>
+                            <span id="pem-page-info" style="color:var(--text-muted); font-size:0.9rem;">Halaman 1</span>
+                            <button class="page-btn" id="pem-next">Selanjutnya</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View: Pengeluaran -->
+            <section id="pengeluaran-view" class="view-section">
+                <header class="view-header flex-header">
+                    <div>
+                        <h1>Pengeluaran</h1>
+                        <p>Catat pengeluaran harian Anda</p>
+                    </div>
+                    <div class="header-actions">
+                        <select id="peng-filter-month" class="filter-select">
+                            <option value="">Bulan Ini</option>
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                        <select id="peng-filter-year" class="filter-select">
+                            <option value="">Tahun Ini</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                </header>
+
+                <div class="mini-summary mb-2">
+                    <div class="mini-card text-expense">
+                        <i class="fa-solid fa-arrow-trend-down fa-fade"></i>
+                        <div style="flex-grow: 1;">
+                            <h4>Total Pengeluaran</h4>
+                            <p id="stat-peng-total" style="font-size: 1.5rem; margin-bottom: 0.3rem;">Rp 0</p>
+                            <span id="stat-peng-change" class="badge badge-neutral">0% vs Bulan Lalu</span>
+                        </div>
+                    </div>
+                    <div class="mini-card text-expense">
+                        <i class="fa-solid fa-fire fa-shake" style="--fa-animation-duration: 3s;"></i>
+                        <div>
+                            <h4>Pengeluaran Tertinggi</h4>
+                            <p id="stat-peng-max" style="font-size: 1.5rem; margin-bottom: 0.3rem;">Rp 0</p>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);" id="stat-peng-max-cat">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advanced-chart-section mb-2">
+                    <div class="chart-controls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h3>Grafik Pengeluaran</h3>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <input type="date" id="peng-chart-start" title="Tanggal Mulai" class="filter-select">
+                            <span style="color:var(--text-muted);">s/d</span>
+                            <input type="date" id="peng-chart-end" title="Tanggal Akhir" class="filter-select">
+                            <select id="peng-chart-group" class="filter-select">
+                                <option value="daily">Harian</option>
+                                <option value="monthly">Bulanan</option>
+                                <option value="yearly">Tahunan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="pengeluaranChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="form-container full-width mb-2">
+                    <h3 style="margin-top:0; margin-bottom:1.5rem; font-size:1.2rem;">Catat Pengeluaran Baru</h3>
+                    <form id="pengeluaran-form" class="form-horizontal">
+                        <div class="form-group">
+                            <label for="pengeluaran-tanggal">Tanggal</label>
+                            <input type="date" id="pengeluaran-tanggal" onclick="this.showPicker()" style="cursor: pointer;" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pengeluaran-kategori">Kategori</label>
+                            <select id="pengeluaran-kategori" required>
+                                <option value="" disabled selected>Pilih Kategori</option>
+                                <option value="Makanan/Minuman">Makanan/Minuman</option>
+                                <option value="Transportasi">Transportasi</option>
+                                <option value="Tagihan/Utang">Tagihan/Utang</option>
+                                <option value="Hiburan">Hiburan</option>
+                                <option value="Belanja">Belanja</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pengeluaran-metode">Metode Pembayaran</label>
+                            <select id="pengeluaran-metode" required>
+                                <option value="" disabled selected>Pilih Metode</option>
+                                <option value="Tunai">Tunai</option>
+                                <option value="QRIS/E-Wallet">QRIS/E-Wallet</option>
+                                <option value="Transfer Bank">Transfer Bank</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pengeluaran-nominal">Nominal (Rp)</label>
+                            <input type="number" id="pengeluaran-nominal" min="1" step="1" placeholder="Contoh: 50000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pengeluaran-keterangan">Keterangan</label>
+                            <textarea id="pengeluaran-keterangan" rows="2" placeholder="Deskripsi singkat..."></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn" style="background-color: var(--color-expense);">Simpan Pengeluaran</button>
+                    </form>
+                </div>
+
+                <div class="history-section">
+                    <div class="history-header flex-header">
+                        <h2>Riwayat Pengeluaran</h2>
+                        <div class="header-actions">
+                            <input type="text" id="peng-table-filter-search" class="filter-select" placeholder="Cari keterangan..." style="width:150px;">
+                            <select id="peng-table-filter-month" class="filter-select">
+                                <option value="">Semua Bulan</option>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                            <select id="peng-table-filter-year" class="filter-select">
+                                <option value="">Semua Tahun</option>
+                                <option value="2027">2027</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                            <select id="peng-table-filter-category" class="filter-select">
+                                <option value="">Semua Kategori</option>
+                                <option value="Makanan/Minuman">Makanan/Minuman</option>
+                                <option value="Transportasi">Transportasi</option>
+                                <option value="Tagihan/Utang">Tagihan/Utang</option>
+                                <option value="Hiburan">Hiburan</option>
+                                <option value="Belanja">Belanja</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="pengeluaran-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Kategori</th>
+                                    <th>Metode</th>
+                                    <th>Keterangan</th>
+                                    <th>Nominal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="pagination-controls">
+                            <button class="page-btn" id="peng-prev">Sebelumnya</button>
+                            <span id="peng-page-info" style="color:var(--text-muted); font-size:0.9rem;">Halaman 1</span>
+                            <button class="page-btn" id="peng-next">Selanjutnya</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View: Tabungan -->
+            <section id="tabungan-view" class="view-section">
+                <div class="premium-tabungan-header">
+                    <div class="premium-header-content">
+                        <h2>Target Tabungan</h2>
+                        <p>Total Dana Terkumpul</p>
+                        <h1 id="total-goal-balance">Rp0</h1>
+                    </div>
+                    <div class="premium-header-icon">
+                        <i class="fa-solid fa-vault fa-bounce" style="--fa-animation-duration: 3s;"></i>
+                    </div>
+                </div>
+
+                <div class="premium-tips-card">
+                    <div class="tips-icon">
+                        <i class="fa-solid fa-lightbulb fa-shake" style="--fa-animation-duration: 4s;"></i>
+                    </div>
+                    <div class="tips-text">
+                        <strong>Tips Keuangan</strong>
+                        <p>Sisihkan uang segera setelah gajian, jangan tunggu sisa bulanan!</p>
+                    </div>
+                </div>
+
+                <div id="goals-empty" class="empty-state hidden" style="background: rgba(15, 23, 42, 0.4); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-top: 1.5rem; backdrop-filter: blur(10px);">
+                    <i class="fa-solid fa-bullseye fa-fade" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 1rem; --fa-animation-duration: 2s;"></i>
+                    <h3 style="color: var(--text-main);">Belum Ada Target</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Mulai wujudkan impian Anda dengan membuat target tabungan pertama.</p>
+                </div>
+
+                <div id="goals-container" class="premium-goals-grid">
+                    <!-- Progress Bars here -->
+                </div>
+
+                <button id="btn-add-goal" class="premium-fab-btn">
+                    <i class="fa-solid fa-plus fa-spin" style="--fa-animation-duration: 5s;"></i> BUAT TARGET
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <span id="toast-message">Notifikasi</span>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Transaksi</h2>
+                <span class="close-modal" style="cursor:pointer; font-size:1.5rem;">&times;</span>
+            </div>
+            <form id="edit-transaction-form">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-jenis">
+                
+                <div class="form-group">
+                    <label for="edit-tanggal">Tanggal</label>
+                    <input type="date" id="edit-tanggal" onclick="this.showPicker()" style="cursor: pointer;" required>
+                </div>
+                
+                <div class="form-group" id="edit-kategori-group">
+                    <label for="edit-kategori">Kategori</label>
+                    <select id="edit-kategori"></select>
+                </div>
+
+                <div class="form-group" id="edit-metode-group" style="display:none;">
+                    <label for="edit-metode">Metode Pembayaran</label>
+                    <select id="edit-metode">
+                        <option value="Tunai">Tunai</option>
+                        <option value="QRIS/E-Wallet">QRIS/E-Wallet</option>
+                        <option value="Transfer Bank">Transfer Bank</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="edit-tujuan-group" style="display:none;">
+                    <label for="edit-tujuan">Tujuan Tabungan</label>
+                    <select id="edit-tujuan"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-nominal">Nominal (Rp)</label>
+                    <input type="number" id="edit-nominal" min="1" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-keterangan">Keterangan</label>
+                    <textarea id="edit-keterangan" rows="2"></textarea>
+                </div>
+                <button type="submit" class="submit-btn" id="edit-submit-btn">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Goal -->
+    <div id="goal-modal" class="modal">
+        <div class="premium-modal-content">
+            <div class="premium-modal-header">
+                <h2>Buka Tabungan Baru</h2>
+                <button class="close-goal-modal premium-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="goal-form" style="padding: 1.5rem;">
+                <div class="premium-form-group" style="margin-bottom: 2rem;">
+                    <label class="premium-label">Pilih Kategori</label>
+                    <div class="premium-type-selector" id="goal-type-selector">
+                        <div class="premium-type-item active" data-type="casual">
+                            <div class="icon-box"><i class="fa-solid fa-piggy-bank"></i></div>
+                            <span>Umum</span>
+                        </div>
+                        <div class="premium-type-item" data-type="travel">
+                            <div class="icon-box"><i class="fa-solid fa-plane-departure"></i></div>
+                            <span>Liburan</span>
+                        </div>
+                        <div class="premium-type-item" data-type="gadget">
+                            <div class="icon-box"><i class="fa-solid fa-mobile-screen"></i></div>
+                            <span>Gadget</span>
+                        </div>
+                        <div class="premium-type-item" data-type="fashion">
+                            <div class="icon-box"><i class="fa-solid fa-bag-shopping"></i></div>
+                            <span>Fashion</span>
+                        </div>
+                        <div class="premium-type-item" data-type="electronics">
+                            <div class="icon-box"><i class="fa-solid fa-computer"></i></div>
+                            <span>Elektronik</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="goal-icon-category" value="casual">
+                </div>
+                
+                <div class="premium-form-group">
+                    <label for="goal-nama" class="premium-label">Nama Target</label>
+                    <input type="text" id="goal-nama" class="premium-input" placeholder="Contoh: Dana Darurat" required>
+                </div>
+                
+                <div class="premium-form-group" style="margin-bottom: 2.5rem;">
+                    <label for="goal-nominal" class="premium-label">Nominal Target (Rp)</label>
+                    <input type="number" id="goal-nominal" class="premium-input" min="1" step="1" placeholder="0" required>
+                </div>
+                
+                <button type="submit" class="premium-submit-btn">BUAT TARGET</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal TopUp / Tarik Tabungan -->
+    <div id="topup-modal" class="modal">
+        <div class="premium-modal-content">
+            <div class="premium-modal-header">
+                <h2 id="topup-modal-title">Top Up Goal</h2>
+                <button class="premium-close-btn close-topup-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="topup-form" style="padding: 1.5rem;">
+                <input type="hidden" id="topup-tujuan">
+                
+                <div class="premium-form-group" style="margin-bottom: 1.5rem;">
+                    <label class="premium-label">Tanggal</label>
+                    <input type="date" id="topup-tanggal" class="premium-input" required>
+                </div>
+
+                <div class="premium-form-group" style="margin-bottom: 1.5rem;">
+                    <label class="premium-label">Jenis</label>
+                    <div style="display: flex; gap: 1rem; color: white; font-weight: 500;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="topup-jenis" value="Menabung" checked> Menabung
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="topup-jenis" value="Tarik Tabungan"> Tarik
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="premium-form-group" style="margin-bottom: 1.5rem;">
+                    <label class="premium-label">Nominal (Rp)</label>
+                    <input type="number" id="topup-nominal" class="premium-input" min="1" step="1" placeholder="0" required>
+                </div>
+
+                <div class="premium-form-group" style="margin-bottom: 2.5rem;">
+                    <label class="premium-label">Keterangan</label>
+                    <input type="text" id="topup-keterangan" class="premium-input" placeholder="Opsional">
+                </div>
+                
+                <button type="submit" class="premium-submit-btn ready">SIMPAN</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Highcharts for 3D Pie Charts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-3d.js"></script>
+    
+    <!-- Chart.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js?v=9"></script>
+</body>
+</html>
