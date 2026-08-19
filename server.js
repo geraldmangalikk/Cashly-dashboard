@@ -11,10 +11,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Konfigurasi PostgreSQL
-const dbConfig = process.env.DATABASE_URL 
+// Konfigurasi PostgreSQL (Vercel Neon Integration uses POSTGRES_URL)
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const dbConfig = connectionString 
     ? { 
-        connectionString: process.env.DATABASE_URL,
+        connectionString: connectionString,
         ssl: { rejectUnauthorized: false }
       }
     : {
@@ -563,6 +564,11 @@ app.get('/api/chart/pengeluaran', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Aplikasi berjalan di http://localhost:${port}`);
-});
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`Aplikasi berjalan di http://localhost:${port}`);
+    });
+}
+
+// Untuk Vercel Serverless
+module.exports = app;
