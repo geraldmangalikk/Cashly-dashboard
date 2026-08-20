@@ -51,6 +51,28 @@ app.get('/api/setup-db', async (req, res) => {
         res.status(500).send("<h1>Error Setup Database</h1><p>" + err.message + "</p>");
     }
 });
+
+// API: Deteksi Lokasi Database
+app.get('/api/where-is-my-db', (req, res) => {
+    try {
+        const url = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+        if (!url) return res.send("<h1>Tidak ada konfigurasi POSTGRES_URL di Vercel</h1>");
+        
+        const parsed = new URL(url);
+        res.send(`
+            <h2>Ini adalah detail Database yang terhubung ke aplikasimu:</h2>
+            <ul>
+                <li><strong>Host / Project ID Neon:</strong> ${parsed.hostname}</li>
+                <li><strong>Nama Database (Branch):</strong> ${parsed.pathname.replace('/', '')}</li>
+                <li><strong>User:</strong> ${parsed.username}</li>
+            </ul>
+            <p>Silakan buka <a href="https://console.neon.tech/app/projects" target="_blank">Dashboard Neon</a> dan cari Project yang host-nya berawalan <strong>${parsed.hostname.split('.')[0]}</strong></p>
+        `);
+    } catch (err) {
+        res.status(500).send("Error: " + err.message);
+    }
+});
+
 const getFilterClause = (month, year) => {
     let whereClause = "WHERE 1=1";
     const params = [];
