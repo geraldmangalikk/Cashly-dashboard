@@ -9,6 +9,7 @@ let pemasukanChartInstance = null;
 let pengeluaranChartInstance = null;
 let allTransactions = [];
 let allGoals = [];
+let allWallets = [];
 
 let currentPagePemasukan = 1;
 let currentPagePengeluaran = 1;
@@ -22,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'nav-pemasukan': 'pemasukan-view',
         'nav-pengeluaran': 'pengeluaran-view',
         'nav-anggaran': 'anggaran-view',
-        'nav-tabungan': 'tabungan-view'
+        'nav-tabungan': 'tabungan-view',
+        'nav-dompet': 'dompet-view'
     };
 
     Object.keys(navs).forEach(navId => {
@@ -199,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
 
     async function loadData() {
+        await loadWallets(); // Load wallets first for dropdowns
         await loadGoals(); // Load goals first for dropdowns
         await loadSummaryAndCharts();
         await loadTransactions();
@@ -828,6 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pemTbody.innerHTML += `<tr>
                     <td>${formatDate(t.Tanggal)}</td>
                     <td>${t.Kategori}</td>
+                    <td>${t.MetodePembayaran || '-'}</td>
                     <td>${t.Keterangan || '-'}</td>
                     <td class="text-income">+ ${formatRupiah(t.Nominal)}</td>
                     <td>
@@ -935,6 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Tanggal: document.getElementById('pemasukan-tanggal').value,
                 Jenis: 'Pemasukan',
                 Kategori: document.getElementById('pemasukan-kategori').value,
+                MetodePembayaran: document.getElementById('pemasukan-metode').value,
                 Nominal: parseFloat(document.getElementById('pemasukan-nominal').value),
                 Keterangan: document.getElementById('pemasukan-keterangan').value
             };
@@ -1115,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             katGrp.style.display = 'none'; metGrp.style.display = 'none'; tujGrp.style.display = 'none';
 
             if (t.Jenis === 'Pemasukan') {
-                katGrp.style.display = 'block';
+                katGrp.style.display = 'block'; metGrp.style.display = 'block';
                 katSel.innerHTML = `
                     <option value="Gaji">Gaji</option>
                     <option value="Bonus">Bonus</option>
@@ -1124,6 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="Lainnya">Lainnya</option>
                 `;
                 katSel.value = t.Kategori;
+                document.getElementById('edit-metode').value = t.MetodePembayaran || '';
             } else if (t.Jenis === 'Pengeluaran') {
                 katGrp.style.display = 'block'; metGrp.style.display = 'block';
                 katSel.innerHTML = `
@@ -1135,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="Lainnya">Lainnya</option>
                 `;
                 katSel.value = t.Kategori;
-                document.getElementById('edit-metode').value = t.MetodePembayaran || 'Tunai';
+                document.getElementById('edit-metode').value = t.MetodePembayaran || '';
             } else { // Tabungan
                 tujGrp.style.display = 'block';
                 document.getElementById('edit-tujuan').value = t.TujuanTabunganId;
@@ -1159,8 +1165,10 @@ document.addEventListener('DOMContentLoaded', () => {
             Keterangan: document.getElementById('edit-keterangan').value
         };
 
-        if (jenis === 'Pemasukan' || jenis === 'Pengeluaran') payload.Kategori = document.getElementById('edit-kategori').value;
-        if (jenis === 'Pengeluaran') payload.MetodePembayaran = document.getElementById('edit-metode').value;
+        if (jenis === 'Pemasukan' || jenis === 'Pengeluaran') {
+            payload.Kategori = document.getElementById('edit-kategori').value;
+            payload.MetodePembayaran = document.getElementById('edit-metode').value;
+        }
         if (jenis === 'Menabung' || jenis === 'Tarik Tabungan') payload.TujuanTabunganId = parseInt(document.getElementById('edit-tujuan').value);
 
         try {
@@ -1347,6 +1355,156 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    // --- DOMPET LOGIC ---
+    const dompetModal = document.getElementById('dompet-modal');
+    const btnAddDompet = document.getElementById('btn-add-dompet');
+    const closeDompetBtn = document.querySelector('.close-dompet-modal');
+    const dompetForm = document.getElementById('dompet-form');
+
+    if (btnAddDompet) {
+        btnAddDompet.addEventListener('click', () => {
+            document.getElementById('dompet-id').value = '';
+            document.getElementById('dompet-nama').value = '';
+            document.getElementById('dompet-saldo').value = '';
+            document.getElementById('dompet-modal-title').textContent = 'Tambah Dompet Baru';
+            dompetModal.classList.add('show');
+        });
+    }
+    if (closeDompetBtn) {
+        closeDompetBtn.addEventListener('click', () => {
+            dompetModal.classList.remove('show');
+        });
+    }
+
+    if (dompetForm) {
+        dompetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('dompet-id').value;
+            const nama = document.getElementById('dompet-nama').value;
+            const saldo = document.getElementById('dompet-saldo').value;
+
+            const url = id ? `${API_URL}/wallets/${id}` : `${API_URL}/wallets`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ Nama: nama, SaldoAwal: saldo })
+                });
+                if (res.ok) {
+                    showToast(`Dompet berhasil ${id ? 'diupdate' : 'ditambahkan'}`);
+                    dompetModal.classList.remove('show');
+                    loadData(); // reload everything as wallet change impacts transactions
+                } else {
+                    showToast('Gagal menyimpan dompet', true);
+                }
+            } catch (err) {
+                showToast('Error menyimpan dompet', true);
+            }
+        });
+    }
+
+    async function loadWallets() {
+        try {
+            const res = await fetch(`${API_URL}/wallets`);
+            if (res.ok) {
+                allWallets = await res.json();
+                renderWallets();
+                updateWalletDropdowns();
+            }
+        } catch (e) { console.error('Error load wallets', e); }
+    }
+
+    function renderWallets() {
+        const container = document.getElementById('dompet-container');
+        const emptyState = document.getElementById('dompet-empty');
+        if (!container || !emptyState) return;
+
+        if (allWallets.length === 0) {
+            emptyState.classList.remove('hidden');
+            container.classList.add('hidden');
+            const totalSaldoEl = document.getElementById('total-saldo');
+            if (totalSaldoEl) totalSaldoEl.textContent = 'Rp0';
+            return;
+        }
+
+        emptyState.classList.add('hidden');
+        container.classList.remove('hidden');
+        container.innerHTML = '';
+
+        let totalSaldo = 0;
+
+        allWallets.forEach(w => {
+            totalSaldo += w.SaldoSaatIni;
+            
+            const card = document.createElement('div');
+            card.className = 'goal-card';
+            card.innerHTML = `
+                <div class="goal-icon"><i class="fa-solid fa-wallet"></i></div>
+                <div class="goal-info" style="flex-grow: 1;">
+                    <h3>${w.Nama}</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Saldo Awal: ${formatRupiah(w.SaldoAwal)}</p>
+                </div>
+                <div class="goal-progress" style="text-align: right;">
+                    <p style="font-size: 1.2rem; font-weight: bold; color: var(--text-main); margin-bottom: 0.5rem;">${formatRupiah(w.SaldoSaatIni)}</p>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="action-btn edit-dompet-btn" style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.4rem 0.8rem;" data-id="${w.Id}" data-nama="${w.Nama}" data-saldo="${w.SaldoAwal}"><i class="fa-solid fa-pen"></i></button>
+                        <button class="action-btn delete-dompet-btn" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 0.4rem 0.8rem;" data-id="${w.Id}"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        const totalSaldoEl = document.getElementById('total-saldo');
+        if (totalSaldoEl) totalSaldoEl.textContent = formatRupiah(totalSaldo);
+
+        // Events
+        document.querySelectorAll('.edit-dompet-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget;
+                document.getElementById('dompet-id').value = target.getAttribute('data-id');
+                document.getElementById('dompet-nama').value = target.getAttribute('data-nama');
+                document.getElementById('dompet-saldo').value = target.getAttribute('data-saldo');
+                document.getElementById('dompet-modal-title').textContent = 'Edit Dompet';
+                dompetModal.classList.add('show');
+            });
+        });
+
+        document.querySelectorAll('.delete-dompet-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if (confirm('Hapus dompet ini? Transaksi yang menggunakan dompet ini akan kehilangan info metode pembayarannya.')) {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    try {
+                        const res = await fetch(`${API_URL}/wallets/${id}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            showToast('Dompet dihapus');
+                            loadData();
+                        } else {
+                            showToast('Gagal menghapus dompet', true);
+                        }
+                    } catch (err) {
+                        showToast('Error', true);
+                    }
+                }
+            });
+        });
+    }
+
+    function updateWalletDropdowns() {
+        const pemSelector = document.getElementById('pemasukan-metode');
+        const pengSelector = document.getElementById('pengeluaran-metode');
+        const editSelector = document.getElementById('edit-metode');
+
+        const optionsHtml = `<option value="" disabled selected>Pilih Dompet</option>` + 
+            allWallets.map(w => `<option value="${w.Nama}">${w.Nama} (${formatRupiah(w.SaldoSaatIni)})</option>`).join('');
+            
+        if (pemSelector) pemSelector.innerHTML = optionsHtml;
+        if (pengSelector) pengSelector.innerHTML = optionsHtml;
+        if (editSelector) editSelector.innerHTML = optionsHtml;
     }
 
 }); // end DOMContentLoaded

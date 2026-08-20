@@ -21,6 +21,10 @@
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>Dashboard</span>
                 </button>
+                <button id="nav-dompet" class="nav-btn">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>Dompet</span>
+                </button>
                 <button id="nav-pemasukan" class="nav-btn">
                     <i class="fa-solid fa-arrow-down"></i>
                     <span>Pemasukan</span>
@@ -154,6 +158,30 @@
                 </div>
             </section>
 
+            <!-- View: Dompet -->
+            <section id="dompet-view" class="view-section">
+                <header class="view-header flex-header">
+                    <div>
+                        <h1>Dompet Saya</h1>
+                        <p>Kelola rekening dan dompet keuanganmu</p>
+                    </div>
+                </header>
+
+                <div id="dompet-empty" class="empty-state hidden" style="background: rgba(15, 23, 42, 0.4); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-top: 1.5rem; backdrop-filter: blur(10px);">
+                    <i class="fa-solid fa-wallet fa-fade" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 1rem; --fa-animation-duration: 2s;"></i>
+                    <h3 style="color: var(--text-main);">Belum Ada Dompet</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Mulai buat dompet baru untuk melacak saldomu.</p>
+                </div>
+
+                <div id="dompet-container" class="premium-goals-grid">
+                    <!-- Wallet cards will be loaded here -->
+                </div>
+
+                <button id="btn-add-dompet" class="premium-fab-btn">
+                    <i class="fa-solid fa-plus fa-spin" style="--fa-animation-duration: 5s;"></i> TAMBAH DOMPET
+                </button>
+            </section>
+
             <!-- View: Pemasukan -->
             <section id="pemasukan-view" class="view-section">
                 <header class="view-header flex-header">
@@ -247,6 +275,13 @@
                             <input type="number" id="pemasukan-nominal" min="1" step="1" placeholder="Contoh: 5000000" required>
                         </div>
                         <div class="form-group">
+                            <label for="pemasukan-metode">Dompet / Rekening</label>
+                            <select id="pemasukan-metode" required>
+                                <option value="" disabled selected>Pilih Dompet</option>
+                                <!-- Dompet options loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="pemasukan-keterangan">Keterangan</label>
                             <textarea id="pemasukan-keterangan" rows="2" placeholder="Deskripsi singkat..."></textarea>
                         </div>
@@ -297,6 +332,7 @@
                                 <tr>
                                     <th>Tanggal</th>
                                     <th>Kategori</th>
+                                    <th>Dompet</th>
                                     <th>Keterangan</th>
                                     <th>Nominal</th>
                                     <th>Aksi</th>
@@ -403,12 +439,9 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="pengeluaran-metode">Metode Pembayaran</label>
+                            <label for="pengeluaran-metode">Dompet / Rekening</label>
                             <select id="pengeluaran-metode" required>
-                                <option value="" disabled selected>Pilih Metode</option>
-                                <option value="Tunai">Tunai</option>
-                                <option value="QRIS/E-Wallet">QRIS/E-Wallet</option>
-                                <option value="Transfer Bank">Transfer Bank</option>
+                                <option value="" disabled selected>Pilih Dompet</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -598,11 +631,9 @@
                 </div>
 
                 <div class="form-group" id="edit-metode-group" style="display:none;">
-                    <label for="edit-metode">Metode Pembayaran</label>
+                    <label for="edit-metode">Dompet / Rekening</label>
                     <select id="edit-metode">
-                        <option value="Tunai">Tunai</option>
-                        <option value="QRIS/E-Wallet">QRIS/E-Wallet</option>
-                        <option value="Transfer Bank">Transfer Bank</option>
+                        <!-- Loaded dynamically -->
                     </select>
                 </div>
 
@@ -747,6 +778,28 @@
                     <input type="number" id="anggaran-nominal" min="1" step="1" placeholder="Contoh: 1500000" required style="background: rgba(15,23,42,0.6); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 10px;">
                 </div>
                 <button type="submit" class="submit-btn" style="background: linear-gradient(135deg, var(--color-primary), #6366f1); border-radius: 10px; padding: 1rem; font-weight: 600; margin-top: 1rem;">Simpan Anggaran</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tambah/Edit Dompet -->
+    <div id="dompet-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; border-radius: 20px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
+                <h2 style="font-size: 1.2rem; color: var(--text-main);" id="dompet-modal-title">Tambah Dompet Baru</h2>
+                <button class="close-dompet-modal" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="dompet-form" style="padding-top: 1.5rem;">
+                <input type="hidden" id="dompet-id">
+                <div class="form-group">
+                    <label for="dompet-nama" style="color: var(--text-muted);">Nama Dompet/Rekening</label>
+                    <input type="text" id="dompet-nama" placeholder="Contoh: BCA, Gopay, Uang Tunai" required style="background: rgba(15,23,42,0.6); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 10px;">
+                </div>
+                <div class="form-group">
+                    <label for="dompet-saldo" style="color: var(--text-muted);">Saldo Awal (Rp)</label>
+                    <input type="number" id="dompet-saldo" min="0" step="1" placeholder="Contoh: 1000000" required style="background: rgba(15,23,42,0.6); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 10px;">
+                </div>
+                <button type="submit" class="submit-btn" style="background: linear-gradient(135deg, var(--color-primary), #6366f1); border-radius: 10px; padding: 1rem; font-weight: 600; margin-top: 1rem;">Simpan Dompet</button>
             </form>
         </div>
     </div>

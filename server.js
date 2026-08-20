@@ -45,6 +45,20 @@ app.get('/api/setup-db', async (req, res) => {
                 Nominal DECIMAL(18, 2) NOT NULL,
                 CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS Dompet (
+                Id SERIAL PRIMARY KEY,
+                Nama VARCHAR(50) UNIQUE NOT NULL,
+                SaldoAwal DECIMAL(18, 2) DEFAULT 0,
+                CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            INSERT INTO Dompet (Nama, SaldoAwal) 
+            VALUES 
+                ('Cash', 0),
+                ('BCA', 0),
+                ('Gopay', 0)
+            ON CONFLICT (Nama) DO NOTHING;
         `);
         res.send("<h1>Setup Database Berhasil!</h1><p>Tabel BudgetKategori sukses dibuat di database Vercel Anda. Silakan kembali ke halaman web Cashly Anda.</p>");
     } catch (err) {
@@ -633,6 +647,81 @@ app.get('/api/chart/pengeluaran', async (req, res) => {
         }
 
         res.json(completeData);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: GET Wallets (Dompet)
+app.get('/api/wallets', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                d.Id as "Id",
+                d.Nama as "Nama",
+                CAST(d.SaldoAwal AS FLOAT) as "SaldoAwal",
+                COALESCE(CAST(d.SaldoAwal + 
+                    SUM(CASE WHEN t.Jenis = 'Pemasukan' THEN t.Nominal ELSE 0 END) - 
+                    SUM(CASE WHEN t.Jenis = 'Pengeluaran' THEN t.Nominal ELSE 0 END) -
+                    SUM(CASE WHEN t.Jenis = 'Menabung' THEN t.Nominal ELSE 0 END) +
+                    SUM(CASE WHEN t.Jenis = 'Tarik Tabungan' THEN t.Nominal ELSE 0 END)
+                AS FLOAT), d.SaldoAwal) as "SaldoSaatIni"
+            FROM Dompet d
+            LEFT JOIN Transaksi t ON d.Nama = t.MetodePembayaran
+            GROUP BY d.Id, d.Nama, d.SaldoAwal
+            ORDER BY d.Id ASC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: POST Wallets
+app.post('/api/wallets', async (req, res) => {
+    try {
+        const { Nama, SaldoAwal } = req.body;
+        if (!Nama) return res.status(400).json({ error: "Nama dompet wajib diisi" });
+        await pool.query(
+            `INSERT INTO Dompet (Nama, SaldoAwal) VALUES ($1, $2)`, 
+            [Nama, SaldoAwal || 0]
+        );
+        res.status(201).json({ message: "Dompet berhasil ditambahkan" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: PUT Wallets
+app.put('/api/wallets/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { Nama, SaldoAwal } = req.body;
+        if (!Nama) return res.status(400).json({ error: "Nama dompet wajib diisi" });
+        
+        const oldWallet = await pool.query(`SELECT Nama FROM Dompet WHERE Id = $1`, [id]);
+        if (oldWallet.rowCount > 0 && oldWallet.rows[0].Nama !== Nama) {
+            await pool.query(`UPDATE Transaksi SET MetodePembayaran = $1 WHERE MetodePembayaran = $2`, [Nama, oldWallet.rows[0].Nama]);
+        }
+        
+        await pool.query(`UPDATE Dompet SET Nama = $1, SaldoAwal = $2 WHERE Id = $3`, [Nama, SaldoAwal || 0, id]);
+        res.json({ message: "Dompet berhasil diupdate" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: DELETE Wallets
+app.delete('/api/wallets/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const wallet = await pool.query(`SELECT Nama FROM Dompet WHERE Id = $1`, [id]);
+        if (wallet.rowCount > 0) {
+            await pool.query(`UPDATE Transaksi SET MetodePembayaran = NULL WHERE MetodePembayaran = $1`, [wallet.rows[0].Nama]);
+        }
+        await pool.query(`DELETE FROM Dompet WHERE Id = $1`, [id]);
+        res.json({ message: "Dompet berhasil dihapus" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

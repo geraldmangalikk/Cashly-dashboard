@@ -1,17 +1,24 @@
-const sql = require('mssql/msnodesqlv8');
-const dbConfig = {
-    server: 'localhost\\SQLEXPRESS',
-    database: 'KeuanganDB',
-    options: {
-        trustedConnection: true,
-        trustServerCertificate: true
-    }
-};
+const { Pool } = require('pg');
+require('dotenv').config();
 
-sql.connect(dbConfig).then(() => {
-    console.log("Koneksi sukses");
-    process.exit(0);
-}).catch(err => {
-    console.error("Gagal:", err);
-    process.exit(1);
+const pool = new Pool({
+    connectionString: "postgresql://postgres.ncwnnswbbhipcmlqwcwz:KipasAngin05.@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
+    ssl: { rejectUnauthorized: false }
 });
+
+async function run() {
+    try {
+        const res = await pool.query(`
+            SELECT Kategori as "Kategori", CAST(SUM(Nominal) AS FLOAT) as "Total"
+            FROM Transaksi
+            WHERE Jenis = 'Pemasukan'
+            GROUP BY Kategori
+        `);
+        console.log(res.rows);
+    } catch(e) {
+        console.error(e);
+    } finally {
+        pool.end();
+    }
+}
+run();
