@@ -655,6 +655,36 @@
         </div>
     </div>
 
+    <!-- Modal TopUp Dompet -->
+    <div id="topup-dompet-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="topup-dompet-title">Tambah Saldo</h2>
+                <button class="close-topup-dompet-modal close-btn">&times;</button>
+            </div>
+            <form id="topup-dompet-form">
+                <input type="hidden" id="topup-dompet-nama">
+                
+                <div class="form-group">
+                    <label>Tanggal</label>
+                    <input type="date" id="topup-dompet-tanggal" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nominal (Rp)</label>
+                    <input type="number" id="topup-dompet-nominal" min="1" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Keterangan</label>
+                    <input type="text" id="topup-dompet-keterangan" placeholder="Contoh: Top Up Saldo">
+                </div>
+                
+                <button type="submit" class="submit-btn" style="background: var(--color-primary);">TAMBAH SALDO</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Tambah Goal -->
     <div id="goal-modal" class="modal">
         <div class="premium-modal-content">

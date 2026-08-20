@@ -1451,6 +1451,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="goal-progress" style="text-align: right;">
                     <p style="font-size: 1.2rem; font-weight: bold; color: var(--text-main); margin-bottom: 0.5rem;">${formatRupiah(w.SaldoSaatIni)}</p>
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="action-btn add-saldo-btn" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 0.4rem 0.8rem;" data-nama="${w.Nama}" title="Tambah Saldo"><i class="fa-solid fa-plus"></i></button>
                         <button class="action-btn edit-dompet-btn" style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.4rem 0.8rem;" data-id="${w.Id}" data-nama="${w.Nama}" data-saldo="${w.SaldoAwal}"><i class="fa-solid fa-pen"></i></button>
                         <button class="action-btn delete-dompet-btn" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 0.4rem 0.8rem;" data-id="${w.Id}"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -1492,7 +1493,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        document.querySelectorAll('.add-saldo-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget;
+                document.getElementById('topup-dompet-nama').value = target.getAttribute('data-nama');
+                document.getElementById('topup-dompet-tanggal').value = new Date().toISOString().split('T')[0];
+                document.getElementById('topup-dompet-title').textContent = 'Tambah Saldo ' + target.getAttribute('data-nama');
+                document.getElementById('topup-dompet-modal').classList.add('show');
+            });
+        });
     }
+
+    const topupDompetForm = document.getElementById('topup-dompet-form');
+    if (topupDompetForm) {
+        topupDompetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                Tanggal: document.getElementById('topup-dompet-tanggal').value,
+                Jenis: 'Pemasukan',
+                Kategori: 'Lainnya',
+                MetodePembayaran: document.getElementById('topup-dompet-nama').value,
+                Nominal: parseFloat(document.getElementById('topup-dompet-nominal').value),
+                Keterangan: document.getElementById('topup-dompet-keterangan').value || 'Top Up Saldo'
+            };
+            try {
+                const res = await fetch(`${API_URL}/transactions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    showToast('Saldo berhasil ditambahkan');
+                    topupDompetForm.reset();
+                    document.getElementById('topup-dompet-modal').classList.remove('show');
+                    loadData();
+                } else showToast('Gagal memproses', true);
+            } catch(err) { showToast('Kesalahan koneksi', true); }
+        });
+    }
+
+    document.querySelectorAll('.close-topup-dompet-modal').forEach(btn => btn.addEventListener('click', () => document.getElementById('topup-dompet-modal').classList.remove('show')));
 
     function updateWalletDropdowns() {
         const pemSelector = document.getElementById('pemasukan-metode');
