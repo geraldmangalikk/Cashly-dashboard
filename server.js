@@ -34,6 +34,23 @@ pool.connect()
     .catch(err => console.error('Gagal terhubung ke PostgreSQL:', err.message));
 
 // Helper for filtering by month/year
+
+// API: Setup DB automatically
+app.get('/api/setup-db', async (req, res) => {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS BudgetKategori (
+                Id SERIAL PRIMARY KEY,
+                Kategori VARCHAR(100) UNIQUE NOT NULL,
+                Nominal DECIMAL(18, 2) NOT NULL,
+                CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        res.send("<h1>Setup Database Berhasil!</h1><p>Tabel BudgetKategori sukses dibuat di database Vercel Anda. Silakan kembali ke halaman web Cashly Anda.</p>");
+    } catch (err) {
+        res.status(500).send("<h1>Error Setup Database</h1><p>" + err.message + "</p>");
+    }
+});
 const getFilterClause = (month, year) => {
     let whereClause = "WHERE 1=1";
     const params = [];
