@@ -29,6 +29,10 @@
                     <i class="fa-solid fa-arrow-up"></i>
                     <span>Pengeluaran</span>
                 </button>
+                <button id="nav-anggaran" class="nav-btn">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>Anggaran</span>
+                </button>
                 <button id="nav-tabungan" class="nav-btn">
                     <i class="fa-solid fa-piggy-bank"></i>
                     <span>Tabungan</span>
@@ -480,6 +484,53 @@
                 </div>
             </section>
 
+            <!-- View: Anggaran -->
+            <section id="anggaran-view" class="view-section">
+                <header class="view-header flex-header">
+                    <div>
+                        <h1>Anggaran Bulanan</h1>
+                        <p>Pantau batas pengeluaran per kategori</p>
+                    </div>
+                    <div class="header-actions">
+                        <select id="anggaran-filter-month" class="filter-select">
+                            <option value="">Bulan Ini</option>
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                        <select id="anggaran-filter-year" class="filter-select">
+                            <option value="">Tahun Ini</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                </header>
+
+                <div id="anggaran-empty" class="empty-state hidden" style="background: rgba(15, 23, 42, 0.4); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-top: 1.5rem; backdrop-filter: blur(10px);">
+                    <i class="fa-solid fa-scale-balanced fa-fade" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 1rem; --fa-animation-duration: 2s;"></i>
+                    <h3 style="color: var(--text-main);">Belum Ada Anggaran</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Mulai kontrol pengeluaranmu dengan membuat anggaran per kategori.</p>
+                </div>
+
+                <div id="anggaran-container" class="premium-goals-grid">
+                    <!-- Budget cards will be loaded here -->
+                </div>
+
+                <button id="btn-add-anggaran" class="premium-fab-btn">
+                    <i class="fa-solid fa-plus fa-spin" style="--fa-animation-duration: 5s;"></i> ATUR ANGGARAN
+                </button>
+            </section>
+
             <!-- View: Tabungan -->
             <section id="tabungan-view" class="view-section">
                 <div class="premium-tabungan-header">
@@ -670,6 +721,36 @@
     <script src="https://code.highcharts.com/highcharts-3d.js"></script>
     
     <!-- Chart.js via CDN -->
+    <!-- Modal Tambah/Edit Anggaran -->
+    <div id="anggaran-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; border-radius: 20px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
+                <h2 style="font-size: 1.2rem; color: var(--text-main);">Atur Anggaran Kategori</h2>
+                <button class="close-anggaran-modal" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="anggaran-form" style="padding-top: 1.5rem;">
+                <input type="hidden" id="anggaran-id">
+                <div class="form-group">
+                    <label for="anggaran-kategori" style="color: var(--text-muted);">Kategori Pengeluaran</label>
+                    <select id="anggaran-kategori" required style="background: rgba(15,23,42,0.6); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 10px;">
+                        <option value="" disabled selected>Pilih Kategori</option>
+                        <option value="Makanan/Minuman">Makanan/Minuman</option>
+                        <option value="Transportasi">Transportasi</option>
+                        <option value="Tagihan/Utang">Tagihan/Utang</option>
+                        <option value="Hiburan">Hiburan</option>
+                        <option value="Belanja">Belanja</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="anggaran-nominal" style="color: var(--text-muted);">Batas Nominal (Rp)</label>
+                    <input type="number" id="anggaran-nominal" min="1" step="1" placeholder="Contoh: 1500000" required style="background: rgba(15,23,42,0.6); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 10px;">
+                </div>
+                <button type="submit" class="submit-btn" style="background: linear-gradient(135deg, var(--color-primary), #6366f1); border-radius: 10px; padding: 1rem; font-weight: 600; margin-top: 1rem;">Simpan Anggaran</button>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="app.js?v=9"></script>
 </body>

@@ -179,28 +179,63 @@ app.delete('/api/transactions/:id', async (req, res) => {
     }
 });
 
-// API: Budget GET
-app.get('/api/budget', async (req, res) => {
+// API: Budget Kategori GET
+app.get('/api/budget/categories', async (req, res) => {
     try {
-        const result = await pool.query('SELECT Nominal as "Nominal" FROM Budget WHERE Id = 1');
-        const nominal = result.rows.length > 0 ? parseFloat(result.rows[0].Nominal) : 0;
-        res.json({ Nominal: nominal });
+        const { month, year } = req.query;
+        let whereStr = "WHERE t.Jenis = 'Pengeluaran'";
+        const params = [];
+        if (month && year) {
+            whereStr += " AND EXTRACT(MONTH FROM t.Tanggal) = $1 AND EXTRACT(YEAR FROM t.Tanggal) = $2";
+            params.push(parseInt(month), parseInt(year));
+        }
+
+        const query = `
+            SELECT 
+                b.Id as "Id",
+                b.Kategori as "Kategori",
+                CAST(b.Nominal AS FLOAT) as "BudgetNominal",
+                COALESCE(CAST(SUM(t.Nominal) AS FLOAT), 0) as "Terpakai"
+            FROM BudgetKategori b
+            LEFT JOIN Transaksi t ON b.Kategori = t.Kategori 
+                ${whereStr.replace("WHERE", "AND")}
+            GROUP BY b.Id, b.Kategori, b.Nominal
+            ORDER BY b.Kategori ASC
+        `;
+        
+        const result = await pool.query(query, params);
+        res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// API: Budget POST
-app.post('/api/budget', async (req, res) => {
+// API: Budget Kategori POST (Upsert)
+app.post('/api/budget/categories', async (req, res) => {
     try {
-        const { Nominal } = req.body;
-        const check = await pool.query('SELECT * FROM Budget WHERE Id = 1');
+        const { Kategori, Nominal } = req.body;
+        if (!Kategori || !Nominal) return res.status(400).json({ error: "Data tidak lengkap" });
+        
+        const check = await pool.query('SELECT * FROM BudgetKategori WHERE Kategori = $1', [Kategori]);
         if (check.rows.length > 0) {
-            await pool.query('UPDATE Budget SET Nominal = $1 WHERE Id = 1', [Nominal]);
+            await pool.query('UPDATE BudgetKategori SET Nominal = $1 WHERE Kategori = $2', [Nominal, Kategori]);
+            res.json({ message: "Budget berhasil diperbarui" });
         } else {
-            await pool.query('INSERT INTO Budget (Id, Nominal) VALUES (1, $1)', [Nominal]);
+            await pool.query('INSERT INTO BudgetKategori (Kategori, Nominal) VALUES ($1, $2)', [Kategori, Nominal]);
+            res.status(201).json({ message: "Budget berhasil ditambahkan" });
         }
-        res.json({ message: "Budget berhasil diatur" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: Budget Kategori DELETE
+app.delete('/api/budget/categories/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const result = await pool.query('DELETE FROM BudgetKategori WHERE Id = $1', [id]);
+        if (result.rowCount === 0) return res.status(404).json({ error: "Budget tidak ditemukan" });
+        res.json({ message: "Budget berhasil dihapus" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

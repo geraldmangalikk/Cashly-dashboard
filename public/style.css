@@ -1342,6 +1342,125 @@ input.premium-input:focus {
     box-shadow: 0 15px 35px rgba(59, 130, 246, 0.6);
 }
 
+/* ===== ANGGARAN (BUDGET) ===== */
+.budget-card {
+    background: var(--bg-surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow-glass);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.budget-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(31, 38, 135, 0.15);
+}
+
+.budget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.budget-category-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.budget-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.budget-btn {
+    background: rgba(255, 255, 255, 0.5);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: var(--text-muted);
+}
+
+.budget-btn:hover {
+    background: white;
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.budget-btn.delete:hover {
+    color: var(--color-expense);
+}
+
+.budget-amounts {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.budget-spent {
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.budget-total {
+    color: var(--text-muted);
+}
+
+.progress-container {
+    width: 100%;
+    height: 12px;
+    background: rgba(15, 23, 42, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.5s ease;
+}
+
+.progress-bar.safe {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.progress-bar.warning {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.progress-bar.danger {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.budget-status {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: right;
+}
+
+.status-safe { color: #10b981; }
+.status-warning { color: #f59e0b; }
+.status-danger { color: #ef4444; }
+
+
 /* ===== COMPREHENSIVE MOBILE RESPONSIVE ===== */
 @media (max-width: 768px) {
     /* Navbar -> Bottom Nav on Mobile */

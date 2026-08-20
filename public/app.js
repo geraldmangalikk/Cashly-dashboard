@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'nav-dashboard': 'dashboard-view',
         'nav-pemasukan': 'pemasukan-view',
         'nav-pengeluaran': 'pengeluaran-view',
+        'nav-anggaran': 'anggaran-view',
         'nav-tabungan': 'tabungan-view'
     };
 
@@ -203,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await loadTransactions();
         await loadPemasukanAnalytics();
         await loadPengeluaranAnalytics();
+        await loadAnggaran();
     }
 
     async function loadGoals() {
@@ -1189,4 +1191,162 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
         document.body.removeChild(link);
     });
-});
+
+    // ===== ANGGARAN LOGIC =====
+    const anggaranMonth = document.getElementById('anggaran-filter-month');
+    const anggaranYear = document.getElementById('anggaran-filter-year');
+    if (anggaranMonth) anggaranMonth.addEventListener('change', loadAnggaran);
+    if (anggaranYear) anggaranYear.addEventListener('change', loadAnggaran);
+
+    const btnAddAnggaran = document.getElementById('btn-add-anggaran');
+    const anggaranModal = document.getElementById('anggaran-modal');
+    const closeAnggaranModal = document.querySelector('.close-anggaran-modal');
+
+    if (btnAddAnggaran) {
+        btnAddAnggaran.addEventListener('click', () => {
+            document.getElementById('anggaran-form').reset();
+            document.getElementById('anggaran-id').value = '';
+            anggaranModal.classList.add('show');
+        });
+    }
+
+    if (closeAnggaranModal) {
+        closeAnggaranModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            anggaranModal.classList.remove('show');
+        });
+    }
+
+    document.getElementById('anggaran-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const kategori = document.getElementById('anggaran-kategori').value;
+        const nominal = parseFloat(document.getElementById('anggaran-nominal').value);
+
+        try {
+            const res = await fetch(`${API_URL}/budget/categories`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ Kategori: kategori, Nominal: nominal })
+            });
+            if (res.ok) {
+                showToast('Anggaran berhasil disimpan');
+                anggaranModal.classList.remove('show');
+                loadAnggaran();
+            } else {
+                const data = await res.json();
+                showToast(data.error || 'Gagal menyimpan anggaran', true);
+            }
+        } catch (error) {
+            showToast('Terjadi kesalahan jaringan', true);
+        }
+    });
+
+    async function loadAnggaran() {
+        const month = document.getElementById('anggaran-filter-month')?.value || '';
+        const year = document.getElementById('anggaran-filter-year')?.value || '';
+        let url = `${API_URL}/budget/categories`;
+        if (month && year) {
+            url += `?month=${month}&year=${year}`;
+        }
+
+        try {
+            const res = await fetch(url);
+            if (res.ok) {
+                const budgets = await res.json();
+                renderAnggaran(budgets);
+            }
+        } catch (error) {
+            console.error('Error load anggaran', error);
+        }
+    }
+
+    function renderAnggaran(budgets) {
+        const container = document.getElementById('anggaran-container');
+        const emptyState = document.getElementById('anggaran-empty');
+        
+        if (!container || !emptyState) return;
+
+        if (budgets.length === 0) {
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+        }
+
+        emptyState.classList.add('hidden');
+        container.classList.remove('hidden');
+        container.innerHTML = '';
+
+        budgets.forEach(b => {
+            let percentage = (b.Terpakai / b.BudgetNominal) * 100;
+            if (percentage > 100) percentage = 100;
+            
+            let statusClass = 'safe';
+            let statusText = 'Aman';
+            if (percentage >= 80 && percentage < 100) {
+                statusClass = 'warning';
+                statusText = 'Hati-hati (Hampir Habis)';
+            } else if (percentage >= 100) {
+                statusClass = 'danger';
+                statusText = 'Over Budget!';
+            }
+
+            const card = document.createElement('div');
+            card.className = 'budget-card';
+            card.innerHTML = `
+                <div class="budget-header">
+                    <div class="budget-category-title">
+                        <i class="fa-solid fa-tag"></i> ${b.Kategori}
+                    </div>
+                    <div class="budget-actions">
+                        <button class="budget-btn edit-budget" data-kat="${b.Kategori}" data-nom="${b.BudgetNominal}">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="budget-btn delete delete-budget" data-id="${b.Id}">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="budget-amounts">
+                    <span class="budget-spent">${formatRupiah(b.Terpakai)} Terpakai</span>
+                    <span class="budget-total">dari ${formatRupiah(b.BudgetNominal)}</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar ${statusClass}" style="width: ${percentage}%"></div>
+                </div>
+                <div class="budget-status status-${statusClass}">${statusText} (${percentage.toFixed(1)}%)</div>
+            `;
+            container.appendChild(card);
+        });
+
+        // Add Listeners for edit & delete
+        document.querySelectorAll('.edit-budget').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget;
+                document.getElementById('anggaran-kategori').value = target.getAttribute('data-kat');
+                document.getElementById('anggaran-nominal').value = target.getAttribute('data-nom');
+                anggaranModal.classList.add('show');
+            });
+        });
+
+        document.querySelectorAll('.delete-budget').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if (confirm('Hapus anggaran ini?')) {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    try {
+                        const res = await fetch(`${API_URL}/budget/categories/${id}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            showToast('Anggaran dihapus');
+                            loadAnggaran();
+                        } else {
+                            showToast('Gagal menghapus', true);
+                        }
+                    } catch (error) {
+                        showToast('Error', true);
+                    }
+                }
+            });
+        });
+    }
+
+}); // end DOMContentLoaded

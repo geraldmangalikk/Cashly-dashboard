@@ -25,3 +25,11 @@ CREATE TABLE IF NOT EXISTS Budget (
     Id INT PRIMARY KEY,
     Nominal DECIMAL(18, 2) NOT NULL
 );
+
+-- Buat Tabel Budget Per Kategori
+CREATE TABLE IF NOT EXISTS BudgetKategori (
+    Id SERIAL PRIMARY KEY,
+    Kategori VARCHAR(100) UNIQUE NOT NULL,
+    Nominal DECIMAL(18, 2) NOT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
